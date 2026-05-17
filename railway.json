@@ -1,0 +1,11 @@
+{
+  "$schema": "https://railway.com/reference/config-as-code/schema.json",
+  "build": {
+    "dockerfilePath": "api/Dockerfile",
+    "watchPatterns": ["api/**"]
+  },
+  "deploy": {
+    "healthcheckPath": "/health",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

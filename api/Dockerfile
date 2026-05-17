@@ -6,10 +6,11 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
 
-COPY package.json tsconfig.json ./
+COPY api/package.json ./
 RUN pnpm install --prod=false --frozen-lockfile=false
 
-COPY src ./src
+COPY api/src ./src
+COPY api/tsconfig.json ./
 RUN pnpm build
 
 FROM node:20-alpine AS runner
