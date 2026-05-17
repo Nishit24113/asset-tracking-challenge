@@ -1,9 +1,8 @@
 {
   "$schema": "https://railway.com/reference/config-as-code/schema.json",
   "build": {
-    "dockerfilePath": "api/Dockerfile",
-    "dockerContext": "api",
-    "watchPatterns": ["api/**"]
+    "dockerfilePath": "Dockerfile",
+    "watchPatterns": ["**"]
   },
   "deploy": {
     "healthcheckPath": "/health",
