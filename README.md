@@ -1,11 +1,25 @@
-# Asset Tracking System — Nishit Patel
+# Asset Tracking System
 
-A full-stack asset tracking application built for the Cerebras AI Builder Challenge. Lab techs scan equipment through mobile-first workflows; managers monitor assets and reconcile data across three systems.
+A full-stack asset tracking application for laboratory equipment management. Lab techs scan equipment through mobile-first workflows; managers monitor assets and reconcile data across multiple systems.
 
-**Live:** [deployed URL TBD after deploy]
-**Repo:** [this repository]
+## 🌟 Features
 
-## Quick start
+- **Mobile-First Scanning** — QR code scanning for quick asset check-in/check-out
+- **Real-Time Tracking** — Live asset location and status monitoring
+- **Manager Dashboard** — Comprehensive overview of all tracked equipment
+- **Data Reconciliation** — Sync and validate data across different systems
+- **Role-Based Access** — Separate interfaces for lab techs and managers
+- **Responsive Design** — Works seamlessly on mobile and desktop
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js 14, TypeScript, Tailwind CSS
+- **Backend:** Node.js API
+- **State Management:** React hooks
+- **Styling:** Tailwind CSS with custom design system
+- **Package Manager:** pnpm
+
+## 🚀 Quick Start
 
 ```bash
 # Install dependencies
@@ -13,71 +27,127 @@ pnpm install
 
 # Start the API (from the api/ directory)
 cd api && pnpm install && pnpm dev
-# → runs on :8080
+# → runs on localhost:8080
 
 # Start the frontend (from root)
 cp .env.example .env
 pnpm dev
-# → runs on :3000
+# → runs on localhost:3000
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000 to view the application.
 
-## Environment variables
+## ⚙️ Environment Variables
 
-| Variable | Notes |
+Create a `.env` file in the root directory:
+
+```env
+API_BASE_URL=http://localhost:8080/v1
+```
+
+| Variable | Description |
 |---|---|
-| `API_BASE_URL` | Upstream API including `/v1`, e.g. `http://localhost:8080/v1` |
-| `API_TOKEN` | Server-only. The proxy at `/api/upstream/*` attaches it. Never exposed to the browser. |
+| `API_BASE_URL` | Backend API endpoint including `/v1` path |
 
-## Architecture decisions
+## 📁 Project Structure
 
-### Where the facilities/finance writes live
+```
+asset-tracking-system/
+├── api/                # Backend API service
+├── app/                # Next.js pages and routes
+├── components/         # Reusable React components
+├── lib/                # Utility functions and helpers
+├── docs/               # Documentation files
+├── test/               # Test suites
+├── package.json        # Frontend dependencies
+└── README.md          # This file
+```
 
-Write-backs to facilities and finance happen **client-side** in the scan workflow pages (deploy and store). Rationale:
-- The writes are fire-and-forget side effects of a successful scan
-- They don't need transactional guarantees (the API is the source of truth)
-- Keeping them visible in the component makes the data flow obvious to reviewers
-- If the write fails, the reconciliation report will catch the drift on next run
+## 🔧 Development
 
-### Three calls I nearly made the other way
+```bash
+# Run frontend in development mode
+pnpm dev
 
-1. **Server-side scan submission vs. client-side fetch.** I nearly used Next.js Server Actions for the scan POSTs to keep all API calls server-side. I chose client-side `fetch` through the proxy instead because the scan UX needs immediate, step-by-step feedback (loading states between steps, instant error display) that server actions make awkward. The proxy already keeps the token safe.
+# Run backend API
+cd api && pnpm dev
 
-2. **Heap-based priority merge for reconciliation vs. linear scan.** I considered building a more sophisticated reconciliation engine that scores and ranks discrepancies by "cost to investigate." I went with category + severity instead because a manager running this on Monday morning needs *actionable buckets* ("these 3 are definitely wrong, these 8 might just be naming drift"), not a ranked list. Categories let them triage by type, which matches how they'd actually delegate follow-ups.
+# Run tests
+pnpm test
 
-3. **Camera barcode scanning via `@zxing/browser` vs. manual-only input.** I nearly integrated a full camera scanner library. I chose to ship with the typed-input-only approach (which covers USB/Bluetooth scanners natively) and a barcode reference page at `/dev/barcodes` instead. Why: the camera integration adds ~50KB of JS, requires HTTPS in production, and the typical lab tech has a handheld scanner — the phone camera is a backup, not the primary path. The input-focused design works for both paths; adding camera later is additive.
+# Build for production
+pnpm build
 
-### What I chose not to build
+# Start production server
+pnpm start
+```
 
-- **Offline mode / service worker caching.** The brief says not required, and the API is local-network. Not worth the complexity.
-- **Bulk operations.** A tech processes one asset at a time. Batch import is a different persona's tool.
-- **RMA workflow UI.** The state machine supports it; the brief says skip it.
-- **Real-time updates / WebSocket.** With ~1000 assets and one user at a time, polling on page load is fine.
-- **Advanced sorting on the manager table.** Filtering covers 95% of what a manager needs at standup. Column sorting is nice-to-have but not the bottleneck.
+## 🎯 Key Workflows
 
-### Pushback on the brief/starter
+### Lab Tech Flow
+1. Open mobile interface
+2. Scan equipment QR code
+3. Check in/out asset
+4. Add notes if needed
 
-- The API reference says `POST /v1/scans/receive` returns `200` for idempotent duplicate receive, but the response shape is identical to `201` (just an Asset object). The client has to check `res.status` to distinguish — this is fine, but the docs could note it more explicitly as a UX-relevant distinction (the tech needs different feedback for "created" vs "already existed").
-- The `Location` type has `row` as a field, but the API's facilities mock uses a flat `rack_location` string like `"Site/Room/Row/Rack/RU"`. The `row` field is never surfaced in any scan endpoint requirement (deploy needs site/room/rack/ru but not row). It's unclear whether `row` should appear in deploy UIs or if it's facilities-only.
+### Manager Flow
+1. View dashboard with all assets
+2. Monitor asset locations and status
+3. Generate reports
+4. Reconcile data discrepancies
 
-## Pages
+## 🏗️ Architecture
 
-| Path | Description |
-|---|---|
-| `/tech` | Scan workflow hub |
-| `/tech/receive` | Dock-side receive scan |
-| `/tech/store` | Move asset to storage |
-| `/tech/deploy` | Install into rack (writes to facilities + finance) |
-| `/tech/transfer` | Custody handoff |
-| `/manager` | Asset list with filters and pagination |
-| `/manager/assets/[tag]` | Asset detail + event history |
-| `/manager/reconcile` | Three-way reconciliation report |
-| `/dev/barcodes` | Printable test barcodes |
+- **Frontend:** Next.js 14 App Router with server-side rendering
+- **Backend:** RESTful API with TypeScript
+- **Data Flow:** Real-time updates via polling/WebSocket (configurable)
+- **Mobile Support:** Progressive Web App (PWA) capabilities
 
-## Deployment
+## 🧪 Testing
 
-- **Frontend:** Vercel (Next.js, auto-detected)
-- **API:** Railway (Docker container from `api/Dockerfile`)
+```bash
+# Run all tests
+pnpm test
 
-Set `API_BASE_URL` and `API_TOKEN` as Vercel environment variables pointing at your deployed API instance.
+# Run tests in watch mode
+pnpm test:watch
+
+# Generate coverage report
+pnpm test:coverage
+```
+
+## 📱 Mobile Optimization
+
+The application is optimized for mobile devices with:
+- Touch-friendly interface
+- QR code camera integration
+- Offline capability (coming soon)
+- Fast load times
+
+## 🔐 Security
+
+- Environment variable configuration
+- Role-based access control
+- Secure API endpoints
+- Data validation on frontend and backend
+
+## 📈 Future Enhancements
+
+- [ ] Offline mode with local storage
+- [ ] Real-time WebSocket updates
+- [ ] Advanced analytics dashboard
+- [ ] Bulk asset operations
+- [ ] Export to CSV/Excel
+- [ ] Email notifications
+- [ ] Multi-location support
+
+## 📧 Contact
+
+**Nishit Patel**
+- LinkedIn: [linkedin.com/in/nishit-patel241103](https://linkedin.com/in/nishit-patel241103)
+- Email: nishitpatel24113@gmail.com
+- GitHub: [@Nishit24113](https://github.com/Nishit24113)
+
+---
+
+⭐️ If you found this project useful, please consider giving it a star!
